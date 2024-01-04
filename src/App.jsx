@@ -1,13 +1,12 @@
-import { useState } from "react";
+
+import useToggle from "./hooks/useToggle";
 
 function App() {
-  const [isShow, setIsShow] = useState(false);
+  const [isShow, toggle] = useToggle();
+
   return (
     <section>
-      <button onClick={()=>{
-        setIsShow(prev => !prev)
-      }}
-      >
+      <button onClick={toggle}>
         {isShow ? "hide" : "show"}</button>
       {
         isShow && <h1>component is showing</h1>
