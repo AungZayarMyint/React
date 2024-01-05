@@ -1,49 +1,72 @@
 import { useEffect, useState } from "react";
-import ProductCard from "./components/ProductCard";
+import AddNote from "./components/AddNote";
+import Navbar from "./components/Navbar";
+import Note from "./components/Note";
+import Intro from "./components/Intro";
 
 function App() {
-  const [products, setProducts] = useState([]);
-  const [isLoading, setLoading] = useState(false);
-  const [isError, setError] = useState(false);
+  // define state
+  const [notes, setNotes] = useState([]);
 
-  useEffect(() => {
-    getProducts();
+  const [loading, setLoading] = useState(false);
+
+  const [error, setError] = useState(null);
+
+  // get notes when start
+  useEffect(()=>{
+    getNotes();
   },[]);
 
-  const getProducts = async() => {
+  // get notes
+  const getNotes = async () => {
+    setLoading(true);
     try{
-    setLoading(true)
-    const response = await fetch("https://fakestoreapi.com/products");
-    if(!response.ok){
-      throw new Error("No products found, come back later.")
-    }
-    const products = await response.json()
+    const response = await fetch ("https://noteapp-bbf0e-default-rtdb.firebaseio.com/notes.json")
 
-    setProducts(products);
-    }catch(error){
-      setError(error.message);
+    if(!response.ok){
+      throw new Error("Cannot connect to the firebase")
     }
-    setLoading(false);
+
+    const notes = await response.json()
+
+    const modifiedNotes = [];
+
+    for(const key in notes){
+      modifiedNotes.push({
+        id : key,
+        note : notes[key],
+      });
+    }
+    setNotes(modifiedNotes);
+  } catch(err) {
+    setError(err.message);
+  }
+  setLoading(false);
   };
 
   return (
     <>
-      <h1 className="title">Store Universe</h1>
-      <section className="flex-ctr">
+      <Navbar totalNotes = {notes.length}/>
       {
-        products.map((product) => (
-          <ProductCard key={product.id} product={product}/>
-        ))
-      }
-      </section>
-      {
-        isLoading && <h1>loading products</h1>
+        loading && !error && <h2 className="message">Getting notes...</h2>
       }
       {
-        isError && <h1>{isError}</h1>
+        error && !loading && <p className="message error">{error}</p>
+      }
+      {
+        !loading && !error && (<>
+          <AddNote getNotes={getNotes}/>
+          {notes.map((note,index) => (
+            <Note key={index} note={note} getNotes={getNotes} />
+            ))
+          }
+        </>)
+      }
+      {
+        notes.length === 0 && <Intro/>
       }
     </>
-  )
+  );
 }
 
 export default App;
